@@ -1,18 +1,16 @@
-# fcmfix(Android 10-15 )
+# fcmfix(Android 10-15 · 欧加系机型)
 
 [![Android CI](https://github.com/kooritea/fcmfix/workflows/Android%20CI/badge.svg)](https://github.com/kooritea/fcmfix/actions)
 
 让fcm/gcm唤醒未启动的应用进行发送通知  
 
+本分支只保留 OPPO/OnePlus/Realme（ColorOS/OxygenOS）相关的适配，已移除 MIUI/HyperOS 专用的 Hook。
+
 ### 附加功能
 
 - 阻止Android系统在应用停止时自动移除通知栏的通知
-- 在miui/hyperos(?)/OxygenOS15(?)/ColorOS15(?)上动态解除来自fcm的自启动限制
-- 移除miui/hyperos对后台应用的通知限制
+- 在OxygenOS15/ColorOS15上动态解除来自fcm的自启动限制、解除进程冻结
 - 没有预期唤醒目标应用时发送提示通知
-
-### lsposed作用域
-- 在miui/hyperos上如果推送没有问题，就不需要勾选电量和性能
 
 ### 关于fcm
 
@@ -22,4 +20,4 @@ fcm是在Android中由google维护的一条介于google服务器与gms应用之�
 
 ### 已知问题
 
-- 非miui/hyperos/OxygenOS15/ColorOS15系统可能需要给予目标应用类似允许自启动的权限，以及电池选项设置为不优化。
+- 非OxygenOS15/ColorOS15系统可能需要给予目标应用类似允许自启动的权限，以及电池选项设置为不优化。
