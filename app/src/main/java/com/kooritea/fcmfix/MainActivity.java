@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
                 }else{
                     continue;
                 }
-                if(allowListSet.contains(appInfo.packageName) || autoAllowAllApps){
+                if(allowListSet.contains(appInfo.packageName) || (autoAllowAllApps && flag)){
                     appInfo.isAllow = true;
                     _allowList.add(appInfo);
                 }else{
@@ -241,11 +241,11 @@ public class MainActivity extends AppCompatActivity {
                     .inflate(R.layout.app_item, parent, false);
             final ViewHolder holder = new ViewHolder(view);
             holder.appView.setOnClickListener(v -> {
-                if(autoAllowAllApps){
-                    return;
-                }
                 int position = holder.getBindingAdapterPosition();
                 AppInfo appInfo = mAppList.get(position);
+                if(autoAllowAllApps && appInfo.includeFcm){
+                    return;
+                }
                 if(appInfo.isAllow){
                     deleteAppInAllowList(appInfo.packageName);
                 }else{
@@ -265,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
             holder.packageName.setText(appInfo.packageName);
             holder.includeFcm.setVisibility(appInfo.includeFcm ? View.VISIBLE : View.GONE);
             holder.isAllow.setChecked(appInfo.isAllow);
-            holder.appView.setAlpha(autoAllowAllApps ? 0.5f : 1f);
+            holder.appView.setAlpha(autoAllowAllApps && appInfo.includeFcm ? 0.5f : 1f);
         }
 
         @Override
@@ -349,7 +349,7 @@ public class MainActivity extends AppCompatActivity {
 
 //        menu.add("目标无响应时代发提示通知").setCheckable(true);
 
-        menu.add("自动应用于所有应用（含新安装）").setCheckable(true);
+        menu.add("自动应用").setCheckable(true);
 
         menu.add("全选包含 FCM 的应用");
 
@@ -387,7 +387,7 @@ public class MainActivity extends AppCompatActivity {
                     item.setChecked(false);
                 }
             }
-            if("自动应用于所有应用（含新安装）".equals(item.getTitle())){
+            if("自动应用".equals(item.getTitle())){
                 try {
                     item.setChecked(this.config.getBoolean("autoAllowAllApps"));
                 } catch (JSONException e) {
@@ -454,7 +454,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("onOptionsItemSelected",e.toString());
             }
         }
-        if(menuItem.getTitle().equals("自动应用于所有应用（含新安装）")){
+        if(menuItem.getTitle().equals("自动应用")){
             try {
                 boolean newValue = !menuItem.isChecked();
                 this.config.put("autoAllowAllApps", newValue);
@@ -462,7 +462,7 @@ public class MainActivity extends AppCompatActivity {
                 if (appListAdapter != null) {
                     appListAdapter.autoAllowAllApps = newValue;
                     for (AppInfo appInfo : appListAdapter.mAppList) {
-                        appInfo.isAllow = newValue || allowList.contains(appInfo.packageName);
+                        appInfo.isAllow = (newValue && appInfo.includeFcm) || allowList.contains(appInfo.packageName);
                     }
                     appListAdapter.notifyDataSetChanged();
                 }

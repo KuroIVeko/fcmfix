@@ -9,6 +9,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.UserManager;
@@ -156,11 +159,36 @@ public abstract class XposedModule {
         if ("com.kooritea.fcmfix".equals(packageName)) {
             return true;
         }
-        if (getBooleanConfig("autoAllowAllApps", false)) {
+        if (getBooleanConfig("autoAllowAllApps", false) && packageHasFcmReceiver(packageName)) {
             return true;
         }
         if (allowList != null) {
             return allowList.contains(packageName);
+        }
+        return false;
+    }
+
+    private static final String[] FCM_RECEIVER_NAMES = {
+            "com.google.firebase.iid.FirebaseInstanceIdReceiver",
+            "com.google.android.gms.measurement.AppMeasurementReceiver"
+    };
+
+    protected boolean packageHasFcmReceiver(String packageName) {
+        try {
+            PackageInfo packageInfo = context.getPackageManager().getPackageInfo(packageName,
+                    PackageManager.GET_RECEIVERS | PackageManager.MATCH_DISABLED_COMPONENTS | PackageManager.MATCH_UNINSTALLED_PACKAGES);
+            if (packageInfo.receivers == null) {
+                return false;
+            }
+            for (ActivityInfo receiverInfo : packageInfo.receivers) {
+                for (String name : FCM_RECEIVER_NAMES) {
+                    if (name.equals(receiverInfo.name)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            return false;
         }
         return false;
     }
