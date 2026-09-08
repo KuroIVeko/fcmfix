@@ -4,7 +4,7 @@
 
 让fcm/gcm唤醒未启动的应用进行发送通知  
 
-本分支只保留 OPPO/OnePlus/Realme（ColorOS/OxygenOS）相关的适配，已移除 MIUI/HyperOS 专用的 Hook。
+测试环境有限，本分支只保留 OPPO/OnePlus/Realme（ColorOS/OxygenOS）相关的适配，已移除 MIUI/HyperOS 专用的 Hook。
 
 ### 附加功能
 
