@@ -156,6 +156,9 @@ public abstract class XposedModule {
         if ("com.kooritea.fcmfix".equals(packageName)) {
             return true;
         }
+        if (getBooleanConfig("autoAllowAllApps", false)) {
+            return true;
+        }
         if (allowList != null) {
             return allowList.contains(packageName);
         }
@@ -191,6 +194,7 @@ public abstract class XposedModule {
                         config.put("disableAutoCleanNotification", remotePreferences.getBoolean("disableAutoCleanNotification", false));
                         config.put("includeIceBoxDisableApp", remotePreferences.getBoolean("includeIceBoxDisableApp", false));
                         config.put("noResponseNotification", remotePreferences.getBoolean("noResponseNotification", false));
+                        config.put("autoAllowAllApps", remotePreferences.getBoolean("autoAllowAllApps", false));
                         config.put("init", true);
                     } catch (Throwable e) {
                         printLog("通过现代Xposed API读取配置失败: " + e.getMessage());

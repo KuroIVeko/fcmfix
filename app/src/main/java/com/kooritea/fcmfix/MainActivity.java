@@ -106,6 +106,9 @@ public class MainActivity extends AppCompatActivity {
             if (!this.config.has("noResponseNotification")) {
                 this.config.put("noResponseNotification", false);
             }
+            if (!this.config.has("autoAllowAllApps")) {
+                this.config.put("autoAllowAllApps", false);
+            }
         } catch (JSONException e) {
             Log.e("ensureDefaultConfig", e.toString());
         }
@@ -124,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
             this.config.put("disableAutoCleanNotification", pref.getBoolean("disableAutoCleanNotification", false));
             this.config.put("includeIceBoxDisableApp", pref.getBoolean("includeIceBoxDisableApp", false));
             this.config.put("noResponseNotification", pref.getBoolean("noResponseNotification", false));
+            this.config.put("autoAllowAllApps", pref.getBoolean("autoAllowAllApps", false));
         } catch (JSONException e) {
             Log.e("loadRemoteConfig", e.toString());
         }
@@ -165,7 +169,10 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        private boolean autoAllowAllApps;
+
         public AppListAdapter(){
+            this.autoAllowAllApps = config.optBoolean("autoAllowAllApps", false);
             Set<String> allowListSet = new HashSet<>(allowList);
             allowListSet.containsAll(allowList);
             List<AppInfo> _allowList = new ArrayList<>();
@@ -186,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
                 }else{
                     continue;
                 }
-                if(allowListSet.contains(appInfo.packageName)){
+                if(allowListSet.contains(appInfo.packageName) || autoAllowAllApps){
                     appInfo.isAllow = true;
                     _allowList.add(appInfo);
                 }else{
@@ -234,6 +241,9 @@ public class MainActivity extends AppCompatActivity {
                     .inflate(R.layout.app_item, parent, false);
             final ViewHolder holder = new ViewHolder(view);
             holder.appView.setOnClickListener(v -> {
+                if(autoAllowAllApps){
+                    return;
+                }
                 int position = holder.getBindingAdapterPosition();
                 AppInfo appInfo = mAppList.get(position);
                 if(appInfo.isAllow){
@@ -255,6 +265,7 @@ public class MainActivity extends AppCompatActivity {
             holder.packageName.setText(appInfo.packageName);
             holder.includeFcm.setVisibility(appInfo.includeFcm ? View.VISIBLE : View.GONE);
             holder.isAllow.setChecked(appInfo.isAllow);
+            holder.appView.setAlpha(autoAllowAllApps ? 0.5f : 1f);
         }
 
         @Override
@@ -316,6 +327,7 @@ public class MainActivity extends AppCompatActivity {
                     .putBoolean("disableAutoCleanNotification", this.config.getBoolean("disableAutoCleanNotification"))
                     .putBoolean("includeIceBoxDisableApp", this.config.getBoolean("includeIceBoxDisableApp"))
                     .putBoolean("noResponseNotification", this.config.getBoolean("noResponseNotification"))
+                    .putBoolean("autoAllowAllApps", this.config.getBoolean("autoAllowAllApps"))
                     .commit();
             if (!saved) {
                 throw new IllegalStateException("配置写入失败");
@@ -336,6 +348,8 @@ public class MainActivity extends AppCompatActivity {
         menu.add("允许唤醒被冰箱冻结的应用").setCheckable(true);
 
 //        menu.add("目标无响应时代发提示通知").setCheckable(true);
+
+        menu.add("自动应用于所有应用（含新安装）").setCheckable(true);
 
         menu.add("全选包含 FCM 的应用");
 
@@ -369,6 +383,13 @@ public class MainActivity extends AppCompatActivity {
             if("目标无响应时代发提示通知".equals(item.getTitle())){
                 try {
                     item.setChecked(this.config.getBoolean("noResponseNotification"));
+                } catch (JSONException e) {
+                    item.setChecked(false);
+                }
+            }
+            if("自动应用于所有应用（含新安装）".equals(item.getTitle())){
+                try {
+                    item.setChecked(this.config.getBoolean("autoAllowAllApps"));
                 } catch (JSONException e) {
                     item.setChecked(false);
                 }
@@ -429,6 +450,22 @@ public class MainActivity extends AppCompatActivity {
             try {
                 this.config.put("noResponseNotification", !menuItem.isChecked());
                 this.updateConfig();
+            } catch (JSONException e) {
+                Log.e("onOptionsItemSelected",e.toString());
+            }
+        }
+        if(menuItem.getTitle().equals("自动应用于所有应用（含新安装）")){
+            try {
+                boolean newValue = !menuItem.isChecked();
+                this.config.put("autoAllowAllApps", newValue);
+                this.updateConfig();
+                if (appListAdapter != null) {
+                    appListAdapter.autoAllowAllApps = newValue;
+                    for (AppInfo appInfo : appListAdapter.mAppList) {
+                        appInfo.isAllow = newValue || allowList.contains(appInfo.packageName);
+                    }
+                    appListAdapter.notifyDataSetChanged();
+                }
             } catch (JSONException e) {
                 Log.e("onOptionsItemSelected",e.toString());
             }
